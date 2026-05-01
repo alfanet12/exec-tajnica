@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="EXEC"/>
+<meta name="theme-color" content="#0A0A0B"/>
+<title>EXEC · Osebna Tajnica</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:#0A0A0B;color:#E8E0D0;font-family:'Georgia','Palatino',serif;max-width:420px;margin:0 auto;min-height:100vh;overflow-x:hidden;}
+  input,textarea,select,button{outline:none;font-family:inherit;}
+  input[type="date"],input[type="time"]{color-scheme:dark;}
+
+  /* HEADER */
+  #header{padding:20px 20px 12px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(201,168,76,.15);}
+  #hdate{font-size:11px;letter-spacing:2px;opacity:.5;text-transform:uppercase;font-family:'Courier New',monospace;}
+  #htime{font-size:32px;font-weight:700;letter-spacing:-1px;line-height:1.1;}
+  #hright{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  #logo{font-size:16px;font-weight:700;letter-spacing:4px;font-family:'Courier New',monospace;}
+  #logo span{color:#C9A84C;}
+  #addbtn{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:#C9A84C;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;line-height:1;}
+
+  /* REMINDER STRIP */
+  #rstrip{background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.2);padding:8px 20px;display:flex;align-items:center;gap:8px;color:#C9A84C;font-size:12px;}
+  #rstrip.hidden{display:none;}
+  #rstrip span{flex:1;}
+  #rdone{background:rgba(201,168,76,.2);border:none;color:#C9A84C;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:12px;}
+
+  /* TABS */
+  #tabbar{display:flex;border-bottom:1px solid rgba(255,255,255,.07);background:#0A0A0B;position:sticky;top:0;z-index:10;}
+  .tab{flex:1;background:none;border:none;color:rgba(232,224,208,.4);padding:10px 4px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;transition:all .2s;border-bottom:2px solid transparent;}
+  .tab.active{color:#C9A84C;border-bottom:2px solid #C9A84C;}
+  .tab svg{width:18px;height:18px;}
+  .tablabel{font-size:9px;letter-spacing:1.5px;font-family:'Courier New',monospace;}
+
+  /* MAIN */
+  #main{padding:16px 16px 90px;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* WEEK NAV */
+  .weeknav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .navbtn{background:none;border:none;color:#C9A84C;font-size:22px;cursor:pointer;padding:4px 10px;line-height:1;}
+  .weeklabel{font-size:12px;letter-spacing:1px;font-weight:600;font-family:'Courier New',monospace;}
+
+  /* DAY PILLS */
+  #daypills{display:flex;gap:4px;margin-bottom:16px;}
+  .daypill{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 2px;border-radius:10px;background:rgba(255,255,255,.03);gap:2px;cursor:pointer;}
+  .daypill.today{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);}
+  .daypill .dpname{font-size:9px;opacity:.5;font-family:'Courier New',monospace;}
+  .daypill .dpnum{font-size:15px;font-weight:700;}
+  .daypill .dpdot{width:5px;height:5px;border-radius:50%;background:#C9A84C;margin-top:2px;}
+
+  /* QUICK BOX */
+  .quickbox{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;margin-bottom:16px;}
+  .quickheader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .slabel{font-size:9px;letter-spacing:3px;color:#C9A84C;font-family:'Courier New',monospace;}
+  .dateinput{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:#C9A84C;border-radius:6px;padding:4px 6px;font-size:11px;font-family:'Courier New',monospace;}
+  .quickta{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#E8E0D0;padding:10px;font-size:12px;font-family:'Courier New',monospace;resize:none;line-height:1.6;}
+  .goldbtn{margin-top:10px;width:100%;background:linear-gradient(135deg,#C9A84C,#A8893A);border:none;color:#0A0A0B;padding:12px;border-radius:8px;font-weight:700;font-size:11px;letter-spacing:2px;cursor:pointer;font-family:'Courier New',monospace;}
+
+  /* DAY BLOCKS */
+  .dayblock{margin-bottom:16px;background:rgba(255,255,255,.02);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,.06);}
+  .dayblockhead{display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06);}
+  .dayblockhead .dblabel{color:#C9A84C;font-weight:700;font-size:11px;letter-spacing:2px;}
+  .dayblockhead .dbdate{font-size:11px;opacity:.5;}
+
+  /* EVENT ROW */
+  .evrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+  .evrow:last-child{border-bottom:none;}
+  .evcolor{width:3px;height:36px;border-radius:2px;flex-shrink:0;}
+  .evinfo{flex:1;}
+  .evtitle{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .evmeta{font-size:10px;opacity:.45;font-family:'Courier New',monospace;}
+  .evnotes{font-size:11px;opacity:.45;margin-top:2px;}
+  .delbtn{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;padding:4px;font-size:14px;}
+
+  /* MONTH */
+  .yearbtnrow{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+  .yearbtn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(232,224,208,.5);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Courier New',monospace;}
+  .yearbtn.active{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:#C9A84C;}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px;}
+  .calhead{text-align:center;font-size:9px;letter-spacing:1px;opacity:.4;padding:4px 0;font-family:'Courier New',monospace;}
+  .calcell{background:rgba(255,255,255,.02);border-radius:6px;padding:6px 4px;cursor:pointer;min-height:44px;display:flex;flex-direction:column;align-items:center;transition:background .15s;}
+  .calcell.today{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);}
+  .calcell .cnum{font-size:12px;}
+  .calcell .cdots{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px;}
+  .cdot{width:5px;height:5px;border-radius:50%;}
+
+  /* AI */
+  #aipage{display:flex;flex-direction:column;}
+  .aiheader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .ghostbtn{background:none;border:1px solid rgba(201,168,76,.3);color:#C9A84C;font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer;letter-spacing:1px;}
+  #chatbox{display:flex;flex-direction:column;gap:10px;padding:4px 0;min-height:200px;max-height:calc(100vh - 390px);overflow-y:auto;}
+  .aiwelcome{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;text-align:center;}
+  .aiwelcome .star{font-size:28px;margin-bottom:8px;}
+  .aiwelcome .wt{font-size:13px;font-weight:600;color:#C9A84C;margin-bottom:4px;}
+  .aiwelcome .ws{font-size:11px;opacity:.6;line-height:1.6;}
+  .bubble{border-radius:10px;padding:10px 12px;max-width:85%;font-size:13px;line-height:1.6;white-space:pre-wrap;}
+  .bubble .bwho{font-size:9px;opacity:.5;margin-bottom:4px;}
+  .bubble.user{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.2);align-self:flex-end;}
+  .bubble.ai{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);align-self:flex-start;}
+  .typing{opacity:.5;letter-spacing:3px;}
+  .chatinput{display:flex;gap:8px;margin-top:8px;padding:8px 0;}
+  #chatta{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#E8E0D0;padding:10px;font-size:13px;resize:none;}
+  #sendbtn{background:linear-gradient(135deg,#C9A84C,#A8893A);border:none;color:#0A0A0B;width:44px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;padding-top:8px;}
+  .chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(232,224,208,.6);font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;}
+
+  /* JOURNAL */
+  .jcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .jhead{display:flex;gap:8px;align-items:center;}
+  .jhead .jdate{color:#C9A84C;font-size:11px;font-weight:700;}
+  .jhead .jtime{font-size:11px;opacity:.5;}
+  .jhead .jdel{margin-left:auto;}
+  .jsummary{font-size:12px;line-height:1.7;opacity:.85;white-space:pre-wrap;margin-top:8px;}
+  details summary{font-size:10px;color:#C9A84C;cursor:pointer;letter-spacing:1px;margin-top:8px;}
+  .jchat{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .jmsg{padding:6px 8px;border-radius:6px;font-size:12px;line-height:1.5;}
+  .jmsg.user{background:rgba(201,168,76,.1);}
+  .jmsg.ai{background:rgba(255,255,255,.03);}
+  .jmsg .jwho{font-size:9px;opacity:.5;margin-bottom:2px;}
+  .emptystate{text-align:center;opacity:.4;font-size:13px;padding:40px 20px;line-height:1.7;}
+
+  /* MODAL */
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:flex-end;justify-content:center;}
+  #overlay.hidden{display:none;}
+  #modal{background:#111113;border:1px solid rgba(201,168,76,.2);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px;max-height:85vh;overflow-y:auto;}
+  .modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .modaltitle{color:#C9A84C;font-weight:700;letter-spacing:2px;font-size:11px;font-family:'Courier New',monospace;}
+  .closebtn{background:none;border:none;color:rgba(232,224,208,.5);font-size:18px;cursor:pointer;}
+  .inp{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#E8E0D0;padding:10px 12px;font-size:13px;width:100%;}
+  .inprow{display:flex;gap:8px;}
+  .inprow .inp{flex:1;}
+  .inprow .inp.w90{flex:0 0 90px;}
+  .rowlabel{font-size:11px;opacity:.6;min-width:60px;display:flex;align-items:center;}
+  .drow{display:flex;gap:8px;align-items:center;}
+  .durabtn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(232,224,208,.5);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;}
+  .durabtn.active{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:#C9A84C;}
+  .cdotbtn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:box-shadow .2s;}
+  .cdotbtn.sel{box-shadow:0 0 0 2px #111113, 0 0 0 4px currentColor;}
+  .togglebtn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:rgba(232,224,208,.5);border-radius:8px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;}
+  .togglebtn.on{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.4);color:#C9A84C;}
+  .sel-inp{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#E8E0D0;padding:6px 10px;font-size:12px;}
+  .togrow{display:flex;gap:8px;align-items:center;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <div id="hdate"></div>
+    <div id="htime"></div>
+  </div>
+  <div id="hright">
+    <div id="logo">EXEC<span>.</span></div>
+    <button id="addbtn" onclick="openModal()">＋</button>
+  </div>
+</div>
+
+<!-- REMINDER STRIP -->
+<div id="rstrip" class="hidden">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" width="16" height="16"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  <span id="rtext"></span>
+  <button id="rdone" onclick="dismissReminder()">✓</button>
+</div>
+
+<!-- TAB BAR -->
+<div id="tabbar">
+  <button class="tab active" onclick="switchTab('week',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <span class="tablabel">TEDEN</span>
+  </button>
+  <button class="tab" onclick="switchTab('month',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <span class="tablabel">MESEC</span>
+  </button>
+  <button class="tab" onclick="switchTab('ai',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>
+    <span class="tablabel">AI</span>
+  </button>
+  <button class="tab" onclick="switchTab('journal',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span class="tablabel">DNEVNIK</span>
+  </button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- WEEK PAGE -->
+  <div id="page-week" class="page active">
+    <div class="weeknav">
+      <button class="navbtn" onclick="shiftWeek(-1)">‹</button>
+      <span class="weeklabel" id="weekrange"></span>
+      <button class="navbtn" onclick="shiftWeek(1)">›</button>
+    </div>
+    <div id="daypills"></div>
+    <div class="quickbox">
+      <div class="quickheader">
+        <span class="slabel">HITRI VNOS</span>
+        <input type="date" id="quickdate" class="dateinput"/>
+      </div>
+      <textarea id="quickta" class="quickta" rows="4" placeholder="09:00 Jutranje poročilo&#10;11:30 Klic z odborom&#10;14:00 Sestanek investitorji"></textarea>
+      <button class="goldbtn" onclick="addQuick()">DODAJ TERMINE</button>
+    </div>
+    <div id="weekevents"></div>
+  </div>
+
+  <!-- MONTH PAGE -->
+  <div id="page-month" class="page">
+    <div class="weeknav">
+      <button class="navbtn" onclick="shiftMonth(-1)">‹</button>
+      <span class="weeklabel" id="monthlabel"></span>
+      <button class="navbtn" onclick="shiftMonth(1)">›</button>
+    </div>
+    <div class="yearbtnrow" id="yearbtnrow"></div>
+    <div id="calgrid" class="calgrid"></div>
+    <div id="monthevents"></div>
+  </div>
+
+  <!-- AI PAGE -->
+  <div id="page-ai" class="page">
+    <div class="aiheader">
+      <span class="slabel">AI TAJNICA</span>
+      <button class="ghostbtn" onclick="saveToJournal()">Shrani v dnevnik</button>
+    </div>
+    <div id="chatbox">
+      <div class="aiwelcome" id="aiwelcome">
+        <div class="star">✦</div>
+        <div class="wt">Dober dan</div>
+        <div class="ws">Kako vam lahko pomagam danes?<br>Vprašajte me za organizacijo,<br>prioritizacijo ali strategijo.</div>
+      </div>
+    </div>
+    <div class="chatinput">
+      <textarea id="chatta" rows="2" placeholder="Vprašajte tajnico..."></textarea>
+      <button id="sendbtn" onclick="sendAI()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+    <div class="chips">
+      <button class="chip" onclick="setChip('Prioritiziraj moj dan')">Prioritiziraj dan</button>
+      <button class="chip" onclick="setChip('Pripravi pregled tedna')">Pregled tedna</button>
+      <button class="chip" onclick="setChip('Predlagaj urnik za danes')">Predlog urnika</button>
+      <button class="chip" onclick="setChip('Analiza zamudnih nalog')">Zamudne naloge</button>
+    </div>
+  </div>
+
+  <!-- JOURNAL PAGE -->
+  <div id="page-journal" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span class="slabel">DNEVNIK DISKURZOV</span>
+    </div>
+    <div id="journallist"></div>
+  </div>
+
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div id="overlay" class="hidden" onclick="overlayClick(event)">
+  <div id="modal">
+    <div class="modalhead">
+      <span class="modaltitle">NOV TERMIN</span>
+      <button class="closebtn" onclick="closeModal()">✕</button>
+    </div>
+    <input class="inp" id="f-title" placeholder="Naziv termina *" type="text"/>
+    <div class="inprow">
+      <input class="inp" id="f-date" type="date"/>
+      <input class="inp w90" id="f-time" type="time" value="09:00"/>
+    </div>
+    <div class="drow">
+      <span class="rowlabel">Trajanje</span>
+      <button class="durabtn active" onclick="setDura(this,30)">30′</button>
+      <button class="durabtn" onclick="setDura(this,60)">60′</button>
+      <button class="durabtn" onclick="setDura(this,90)">90′</button>
+      <button class="durabtn" onclick="setDura(this,120)">120′</button>
+    </div>
+    <div class="drow">
+      <span class="rowlabel">Barva</span>
+      <button class="cdotbtn sel" style="background:#C9A84C;color:#C9A84C;" onclick="setColor(this,'gold')" title="Zlata"></button>
+      <button class="cdotbtn" style="background:#8E9AAF;color:#8E9AAF;" onclick="setColor(this,'silver')" title="Srebrna"></button>
+      <button class="cdotbtn" style="background:#C96A6A;color:#C96A6A;" onclick="setColor(this,'rose')" title="Rdeča"></button>
+      <button class="cdotbtn" style="background:#4CAF82;color:#4CAF82;" onclick="setColor(this,'emerald')" title="Zelena"></button>
+      <button class="cdotbtn" style="background:#4C8EAF;color:#4C8EAF;" onclick="setColor(this,'sky')" title="Modra"></button>
+    </div>
+    <div class="togrow">
+      <button class="togglebtn" id="remindbtn" onclick="toggleRemind()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Opomnik
+      </button>
+      <select class="sel-inp" id="remindhours" style="display:none;">
+        <option value="1">1 uro prej</option>
+        <option value="2">2 uri prej</option>
+        <option value="24" selected>1 dan prej</option>
+        <option value="48">2 dni prej</option>
+      </select>
+    </div>
+    <textarea class="inp" id="f-notes" placeholder="Opombe (neobvezno)" rows="2"></textarea>
+    <button class="goldbtn" onclick="addEvent()">SHRANI TERMIN</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const DAYS_SI  = ["Ned","Pon","Tor","Sre","Čet","Pet","Sob"];
+const MONTHS_SI = ["Januar","Februar","Marec","April","Maj","Junij","Julij","Avgust","September","Oktober","November","December"];
+const COLORS   = {gold:"#C9A84C",silver:"#8E9AAF",rose:"#C96A6A",emerald:"#4CAF82",sky:"#4C8EAF"};
+
+function pad(n){return String(n).padStart(2,"0");}
+function fmtDate(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+function fmtTime(d){return `${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+function todayStr(){return fmtDate(new Date());}
+
+let events    = JSON.parse(localStorage.getItem("sec_events")||"[]");
+let reminders = JSON.parse(localStorage.getItem("sec_reminders")||"[]");
+let journal   = JSON.parse(localStorage.getItem("sec_journal")||"[]");
+let weekBase  = new Date();
+let viewYear  = new Date().getFullYear();
+let viewMonth = new Date().getMonth();
+let aiChat    = [];
+let formDura  = 30;
+let formColor = "gold";
+let formRemind= false;
+
+function save(){
+  localStorage.setItem("sec_events",JSON.stringify(events));
+  localStorage.setItem("sec_reminders",JSON.stringify(reminders));
+  localStorage.setItem("sec_journal",JSON.stringify(journal));
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────────
+function updateClock(){
+  const now = new Date();
+  const days = ["Nedélja","Ponedeljek","Torek","Sreda","Četrtek","Petek","Sobota"];
+  document.getElementById("hdate").textContent = `${days[now.getDay()]}, ${now.getDate()}. ${MONTHS_SI[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById("htime").textContent = fmtTime(now);
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("page-"+name).classList.add("active");
+  if(name==="week")    renderWeek();
+  if(name==="month")   renderMonth();
+  if(name==="journal") renderJournal();
+}
+
+// ── WEEK ──────────────────────────────────────────────────────────────────────
+function getWeekDates(base){
+  const d = new Date(base);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day===0?-6:1);
+  const mon = new Date(d.setDate(diff));
+  return Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return x;});
+}
+
+function shiftWeek(dir){weekBase.setDate(weekBase.getDate()+dir*7);renderWeek();}
+
+function renderWeek(){
+  const dates = getWeekDates(weekBase);
+  const td = todayStr();
+
+  // range label
+  document.getElementById("weekrange").textContent =
+    `${dates[0].getDate()}. – ${dates[6].getDate()}. ${MONTHS_SI[dates[6].getMonth()]}`;
+
+  // day pills
+  const pills = document.getElementById("daypills");
+  pills.innerHTML = "";
+  dates.forEach(d=>{
+    const ds = fmtDate(d);
+    const hasEv = events.some(e=>e.date===ds);
+    const div = document.createElement("div");
+    div.className = "daypill" + (ds===td?" today":"");
+    div.innerHTML = `<span class="dpname">${DAYS_SI[d.getDay()]}</span><span class="dpnum">${d.getDate()}</span>${hasEv?'<span class="dpdot"></span>':""}`;
+    pills.appendChild(div);
+  });
+
+  // set quick date default
+  const qd = document.getElementById("quickdate");
+  if(!qd.value) qd.value = td;
+
+  // events per day
+  const container = document.getElementById("weekevents");
+  container.innerHTML = "";
+  dates.forEach(d=>{
+    const ds = fmtDate(d);
+    const evs = events.filter(e=>e.date===ds).sort((a,b)=>a.time.localeCompare(b.time));
+    if(!evs.length) return;
+    const block = document.createElement("div");
+    block.className = "dayblock";
+    block.innerHTML = `<div class="dayblockhead"><span class="dblabel">${DAYS_SI[d.getDay()].toUpperCase()}</span><span class="dbdate">${d.getDate()}. ${MONTHS_SI[d.getMonth()]}</span></div>`;
+    evs.forEach(ev=>{
+      block.appendChild(makeEvRow(ev));
+    });
+    container.appendChild(block);
+  });
+
+  renderReminders();
+}
+
+function makeEvRow(ev){
+  const row = document.createElement("div");
+  row.className = "evrow";
+  row.innerHTML = `
+    <div class="evcolor" style="background:${COLORS[ev.color]||COLORS.gold}"></div>
+    <div class="evinfo">
+      <div class="evtitle">${ev.title}</div>
+      <div class="evmeta">${ev.time} · ${ev.duration} min</div>
+      ${ev.notes?`<div class="evnotes">${ev.notes}</div>`:""}
+    </div>
+    <button class="delbtn" onclick="deleteEvent(${ev.id})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+    </button>`;
+  return row;
+}
+
+function deleteEvent(id){
+  events = events.filter(e=>e.id!==id);
+  reminders = reminders.filter(r=>r.eventId!==id);
+  save();
+  renderWeek();
+  renderMonth();
+}
+
+// QUICK ADD
+function addQuick(){
+  const txt = document.getElementById("quickta").value.trim();
+  const date = document.getElementById("quickdate").value || todayStr();
+  if(!txt) return;
+  txt.split("\n").filter(Boolean).forEach(line=>{
+    const m = line.match(/^(\d{1,2}):(\d{2})\s+(.*)/);
+    if(m){
+      events.push({id:Date.now()+Math.random(),title:m[3],date,time:`${pad(m[1])}:${m[2]}`,duration:60,reminder:false,color:"gold",notes:""});
+    } else {
+      events.push({id:Date.now()+Math.random(),title:line,date,time:"09:00",duration:30,reminder:false,color:"silver",notes:""});
+    }
+  });
+  document.getElementById("quickta").value="";
+  save();
+  renderWeek();
+}
+
+// ── MONTH ─────────────────────────────────────────────────────────────────────
+function shiftMonth(dir){
+  viewMonth += dir;
+  if(viewMonth>11){viewMonth=0;viewYear++;}
+  if(viewMonth<0){viewMonth=11;viewYear--;}
+  renderMonth();
+}
+
+function renderMonth(){
+  document.getElementById("monthlabel").textContent = `${MONTHS_SI[viewMonth]} ${viewYear}`;
+
+  // year buttons
+  const yr = document.getElementById("yearbtnrow");
+  yr.innerHTML="";
+  [2025,2026,2027,2028].forEach(y=>{
+    const b=document.createElement("button");
+    b.className="yearbtn"+(viewYear===y?" active":"");
+    b.textContent=y;
+    b.onclick=()=>{viewYear=y;renderMonth();};
+    yr.appendChild(b);
+  });
+
+  // calendar grid
+  const grid=document.getElementById("calgrid");
+  grid.innerHTML="";
+  ["P","T","S","Č","P","S","N"].forEach(d=>{
+    const h=document.createElement("div");h.className="calhead";h.textContent=d;grid.appendChild(h);
+  });
+  const firstDay=new Date(viewYear,viewMonth,1).getDay();
+  const offset=firstDay===0?6:firstDay-1;
+  const daysInM=new Date(viewYear,viewMonth+1,0).getDate();
+  const td=todayStr();
+  for(let i=0;i<offset;i++){const e=document.createElement("div");grid.appendChild(e);}
+  for(let day=1;day<=daysInM;day++){
+    const ds=`${viewYear}-${pad(viewMonth+1)}-${pad(day)}`;
+    const evs=events.filter(e=>e.date===ds);
+    const cell=document.createElement("div");
+    cell.className="calcell"+(ds===td?" today":"");
+    cell.innerHTML=`<span class="cnum">${day}</span><div class="cdots">${evs.slice(0,3).map(ev=>`<div class="cdot" style="background:${COLORS[ev.color]||COLORS.gold}"></div>`).join("")}</div>`;
+    cell.onclick=()=>{
+      document.getElementById("f-date").value=ds;
+      openModal();
+    };
+    grid.appendChild(cell);
+  }
+
+  // month event list
+  const ml=document.getElementById("monthevents");
+  ml.innerHTML="";
+  const mevs=events.filter(e=>e.date.startsWith(`${viewYear}-${pad(viewMonth+1)}`))
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  if(mevs.length===0){
+    ml.innerHTML=`<div class="emptystate">Ni terminov ta mesec.</div>`;
+    return;
+  }
+  mevs.forEach(ev=>{
+    const row=makeEvRow(ev);
+    // override meta to show full date
+    row.querySelector(".evmeta").textContent=`${ev.date} · ${ev.time} · ${ev.duration} min`;
+    ml.appendChild(row);
+  });
+}
+
+// ── REMINDERS ─────────────────────────────────────────────────────────────────
+function renderReminders(){
+  const active = reminders.filter(r=>!r.done);
+  const strip = document.getElementById("rstrip");
+  if(active.length===0){strip.classList.add("hidden");return;}
+  strip.classList.remove("hidden");
+  document.getElementById("rtext").textContent = `${active[0].title} — ${active[0].date} ${active[0].time}`;
+}
+
+function dismissReminder(){
+  const active=reminders.filter(r=>!r.done);
+  if(active.length){reminders=reminders.map(r=>r.id===active[0].id?{...r,done:true}:r);}
+  save();renderReminders();
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(){
+  document.getElementById("f-date").value=todayStr();
+  document.getElementById("f-time").value="09:00";
+  document.getElementById("f-title").value="";
+  document.getElementById("f-notes").value="";
+  document.getElementById("overlay").classList.remove("hidden");
+}
+function closeModal(){document.getElementById("overlay").classList.add("hidden");}
+function overlayClick(e){if(e.target===document.getElementById("overlay"))closeModal();}
+
+function setDura(btn,v){
+  formDura=v;
+  document.querySelectorAll(".durabtn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+function setColor(btn,c){
+  formColor=c;
+  document.querySelectorAll(".cdotbtn").forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+}
+function toggleRemind(){
+  formRemind=!formRemind;
+  const b=document.getElementById("remindbtn");
+  const s=document.getElementById("remindhours");
+  b.classList.toggle("on",formRemind);
+  s.style.display=formRemind?"block":"none";
+}
+function addEvent(){
+  const title=document.getElementById("f-title").value.trim();
+  if(!title){document.getElementById("f-title").focus();return;}
+  const date=document.getElementById("f-date").value;
+  const time=document.getElementById("f-time").value;
+  const notes=document.getElementById("f-notes").value.trim();
+  const reminderH=parseInt(document.getElementById("remindhours").value)||24;
+  const ev={id:Date.now(),title,date,time,duration:formDura,color:formColor,reminder:formRemind,reminderH,notes};
+  events.push(ev);
+  if(formRemind){
+    reminders.push({id:Date.now()+1,eventId:ev.id,title,date,time,hoursAhead:reminderH,done:false});
+  }
+  save();
+  closeModal();
+  renderWeek();
+  renderMonth();
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+async function sendAI(){
+  const inp=document.getElementById("chatta");
+  const txt=inp.value.trim();
+  if(!txt) return;
+  inp.value="";
+
+  // hide welcome
+  const welcome=document.getElementById("aiwelcome");
+  if(welcome) welcome.remove();
+
+  aiChat.push({role:"user",content:txt});
+  renderChat();
+
+  // typing indicator
+  const chatbox=document.getElementById("chatbox");
+  const typing=document.createElement("div");
+  typing.className="bubble ai";typing.id="typing";
+  typing.innerHTML='<div class="bwho">TAJNICA</div><span class="typing">● ● ●</span>';
+  chatbox.appendChild(typing);
+  chatbox.scrollTop=chatbox.scrollHeight;
+
+  // build context
+  const td=todayStr();
+  const todayEvs=events.filter(e=>e.date===td).sort((a,b)=>a.time.localeCompare(b.time));
+  const ctx=`Danes (${td}) ima uporabnik naslednje termine: ${todayEvs.map(e=>`${e.time} – ${e.title}`).join(", ")||"ni terminov"}.`;
+
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:`Si ekskluzivna osebna tajnica CEO-ja multinacionalke. ${ctx} Odgovarjaš v slovenščini, profesionalno, jedrnato, s konkretnimi predlogi. Ko daš organizacijske predloge, jih strukturiraj jasno. Ko je diskurz zaključen, povzetek označi z besedo ZAKLJUČENO.`,
+        messages:aiChat
+      })
+    });
+    const data=await resp.json();
+    const reply=data.content?.[0]?.text||"Napaka pri odgovoru.";
+    aiChat.push({role:"assistant",content:reply});
+
+    // auto-journal
+    if(reply.toUpperCase().includes("ZAKLJUČENO")){
+      journal.unshift({id:Date.now(),date:td,time:fmtTime(new Date()),summary:reply,chat:[...aiChat]});
+      save();
+    }
+  } catch(e){
+    aiChat.push({role:"assistant",content:"⚠️ Napaka pri povezavi z AI strežnikom."});
+  }
+
+  const t=document.getElementById("typing");
+  if(t) t.remove();
+  renderChat();
+}
+
+function renderChat(){
+  const chatbox=document.getElementById("chatbox");
+  // remove all bubbles
+  chatbox.querySelectorAll(".bubble").forEach(b=>b.remove());
+  aiChat.forEach(m=>{
+    const b=document.createElement("div");
+    b.className="bubble "+(m.role==="user"?"user":"ai");
+    b.innerHTML=`<div class="bwho">${m.role==="user"?"VI":"TAJNICA"}</div>${m.content}`;
+    chatbox.appendChild(b);
+  });
+  chatbox.scrollTop=chatbox.scrollHeight;
+}
+
+function setChip(txt){
+  document.getElementById("chatta").value=txt;
+  document.getElementById("chatta").focus();
+}
+
+function saveToJournal(){
+  if(!aiChat.length) return;
+  const last=aiChat[aiChat.length-1];
+  journal.unshift({id:Date.now(),date:todayStr(),time:fmtTime(new Date()),summary:last.content,chat:[...aiChat]});
+  save();
+  aiChat=[];
+  const chatbox=document.getElementById("chatbox");
+  chatbox.innerHTML=`<div class="aiwelcome" id="aiwelcome"><div class="star">✦</div><div class="wt">Pogovor shranjen</div><div class="ws">Dnevnik posodobljen.</div></div>`;
+  alert("Pogovor shranjen v dnevnik ✓");
+}
+
+// keyboard shortcut for chat
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("chatta")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAI();}
+  });
+});
+
+// ── JOURNAL ───────────────────────────────────────────────────────────────────
+function renderJournal(){
+  const list=document.getElementById("journallist");
+  list.innerHTML="";
+  if(!journal.length){
+    list.innerHTML='<div class="emptystate">Še ni shranjenih pogovorov.<br>Zaključite diskurz v AI zavihku.</div>';
+    return;
+  }
+  journal.forEach(entry=>{
+    const card=document.createElement("div");
+    card.className="jcard";
+    const chat=(entry.chat||[]).map(m=>`<div class="jmsg ${m.role}"><div class="jwho">${m.role==="user"?"VI":"TAJNICA"}</div>${m.content}</div>`).join("");
+    card.innerHTML=`
+      <div class="jhead">
+        <span class="jdate">${entry.date}</span>
+        <span class="jtime">${entry.time}</span>
+        <button class="delbtn jdel" onclick="deleteJournal(${entry.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <div class="jsummary">${entry.summary}</div>
+      ${chat?`<details><summary>CELOTEN POGOVOR</summary><div class="jchat">${chat}</div></details>`:""}
+    `;
+    list.appendChild(card);
+  });
+}
+
+function deleteJournal(id){
+  journal=journal.filter(j=>j.id!==id);
+  save();renderJournal();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderWeek();
+renderReminders();
+</script>
+</body>
+</html>
